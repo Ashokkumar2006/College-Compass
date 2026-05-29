@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Navbar from "@/components/organisms/Navbar";
 import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
+import Badge from "@/components/atoms/Badge";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -12,8 +13,10 @@ export default function AddCollegePage() {
   const { accessToken } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -21,10 +24,33 @@ export default function AddCollegePage() {
     rank: "",
     fees: "",
     placement: "",
+    stream: "Engineering",
   });
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setUploadedImages((prev) => [...prev, data.url]);
+    } catch (err: any) {
+      setError("Image upload failed: " + err.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -34,7 +60,6 @@ export default function AddCollegePage() {
     }
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/colleges", {
         method: "POST",
@@ -48,10 +73,10 @@ export default function AddCollegePage() {
           rank: form.rank ? parseInt(form.rank) : null,
           fees: form.fees ? parseFloat(form.fees) : null,
           placement: form.placement || null,
-          images: [],
+          stream: form.stream,
+          images: uploadedImages,
         }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setSuccess(true);
@@ -73,13 +98,18 @@ export default function AddCollegePage() {
           </Link>
         </div>
 
-        <h1 style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }} className="text-3xl font-bold text-[#0F172A]">
+        <h1
+          style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
+          className="text-3xl font-bold text-[#0F172A]"
+        >
           Add New College
         </h1>
 
         <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-8 flex flex-col gap-5">
           {error && (
-            <div className="bg-[#FEE2E2] text-[#991B1B] text-sm px-4 py-3 rounded-lg">{error}</div>
+            <div className="bg-[#FEE2E2] text-[#991B1B] text-sm px-4 py-3 rounded-lg">
+              {error}
+            </div>
           )}
           {success && (
             <div className="bg-[#D1FAE5] text-[#065F46] text-sm px-4 py-3 rounded-lg">
@@ -93,12 +123,33 @@ export default function AddCollegePage() {
             value={form.name}
             onChange={(e) => handleChange("name", e.target.value)}
           />
+
           <Input
             label="Location *"
             placeholder="e.g. Mumbai, Maharashtra"
             value={form.location}
             onChange={(e) => handleChange("location", e.target.value)}
           />
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-[#0F172A]">Stream</label>
+            <div className="flex gap-2">
+              {["Engineering", "Medical"].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleChange("stream", s)}
+                  className={`px-5 py-2 rounded-full text-sm font-medium border transition-all ${
+                    form.stream === s
+                      ? "bg-[#4F46E5] text-white border-[#4F46E5]"
+                      : "bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#4F46E5]"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Input
             label="National Rank"
             type="number"
@@ -106,6 +157,7 @@ export default function AddCollegePage() {
             value={form.rank}
             onChange={(e) => handleChange("rank", e.target.value)}
           />
+
           <Input
             label="Annual Fees (₹)"
             type="number"
@@ -113,12 +165,42 @@ export default function AddCollegePage() {
             value={form.fees}
             onChange={(e) => handleChange("fees", e.target.value)}
           />
+
           <Input
-            label="Average Placement"
+            label="Average Placement Package"
             placeholder="e.g. ₹21 LPA"
             value={form.placement}
             onChange={(e) => handleChange("placement", e.target.value)}
           />
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-[#0F172A]">
+              College Image
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="text-sm text-[#64748B] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#EEF2FF] file:text-[#4F46E5] hover:file:bg-[#E0E7FF]"
+            />
+            {uploading && (
+              <p className="text-sm text-[#4F46E5]">Uploading image...</p>
+            )}
+            {uploadedImages.length > 0 && (
+              <div className="flex gap-2 flex-wrap mt-2">
+                {uploadedImages.map((url, i) => (
+                  <div key={i} className="relative">
+                    <img
+                      src={url}
+                      alt="Uploaded"
+                      className="w-20 h-20 object-cover rounded-lg border border-[#E2E8F0]"
+                    />
+                    <Badge variant="success" size="sm">✓</Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div className="flex gap-3 pt-2">
             <Button
@@ -131,7 +213,9 @@ export default function AddCollegePage() {
               Add College
             </Button>
             <Link href="/admin/colleges" className="flex-1">
-              <Button variant="secondary" size="md" fullWidth>Cancel</Button>
+              <Button variant="secondary" size="md" fullWidth>
+                Cancel
+              </Button>
             </Link>
           </div>
         </div>

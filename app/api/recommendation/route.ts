@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import openai from "@/lib/openai";
+import groq from "@/lib/groq";
 import prisma from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
@@ -7,63 +7,76 @@ export async function POST(req: NextRequest) {
     const { rank, stream } = await req.json();
 
     if (!rank || !stream) {
-      return NextResponse.json({ error: "Rank and stream are required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Rank and stream are required" },
+        { status: 400 }
+      );
     }
 
     const colleges = await prisma.college.findMany({
       take: 20,
       orderBy: { rank: "asc" },
-      include: { courses: true },
+      select: {
+        name: true,
+        location: true,
+        rank: true,
+        fees: true,
+        placement: true,
+        rating: true,
+        slug: true,
+        stream: true,
+      },
     });
 
-    const collegeData = colleges.map((c) => ({
-      name: c.name,
-      location: c.location,
-      rank: c.rank,
-      fees: c.fees,
-      placement: c.placement,
-      rating: c.rating,
-      slug: c.slug,
-    }));
-
     const prompt = `
-You are an expert Indian college counselor. A student has the following profile:
-- Stream: ${stream}
-- Rank/Score: ${rank}
+You are an expert Indian college counselor helping Class 12 students.
 
-Here are available colleges in our database:
-${JSON.stringify(collegeData, null, 2)}
+Student Profile:
+- Stream: ${stream}
+- Rank/Score: ${rank} ${stream === "engineering" ? "(JEE rank)" : "(NEET score)"}
+
+Available colleges:
+${JSON.stringify(colleges, null, 2)}
 
 Based on the student's rank and stream, recommend the top 5 most suitable colleges.
-For each college provide:
-1. College name
-2. Admission chance (High/Medium/Low) based on rank
-3. A brief 1-2 sentence reason why this college is recommended
+Only recommend colleges that match the student's stream.
+For JEE rank: lower rank number = better (rank 1 is best).
+For NEET score: higher score = better (720 is max).
 
-Respond ONLY with a valid JSON array like this:
+Respond ONLY with a valid JSON array. No extra text, no markdown, no backticks:
 [
   {
     "name": "College Name",
     "slug": "college-slug",
     "chance": "High",
-    "reason": "Brief reason here"
+    "reason": "Brief 1-2 sentence reason"
   }
 ]
+
+chance must be exactly "High", "Medium", or "Low".
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
+      temperature: 0.3,
       max_tokens: 1000,
     });
 
     const content = completion.choices[0].message.content || "[]";
-    const clean = content.replace(/```json|```/g, "").trim();
+    const clean = content
+      .replace(/```json/g, "")
+      .replace(/```/g, "")
+      .trim();
+
     const recommendations = JSON.parse(clean);
 
     return NextResponse.json({ recommendations, rank, stream });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to get recommendations" }, { status: 500 });
+    console.error("Recommendation error:", error);
+    return NextResponse.json(
+      { error: "Failed to get recommendations. Please try again." },
+      { status: 500 }
+    );
   }
 }

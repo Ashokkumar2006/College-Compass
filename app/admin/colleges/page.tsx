@@ -5,6 +5,7 @@ import Navbar from "@/components/organisms/Navbar";
 import Badge from "@/components/atoms/Badge";
 import Button from "@/components/atoms/Button";
 import { useAuth } from "@/context/AuthContext";
+import Link from "next/link";
 
 interface College {
   id: string;
@@ -69,7 +70,9 @@ export default function AdminCollegesPage() {
             </h1>
             <p className="text-[#64748B] mt-1">{colleges.length} colleges in database</p>
           </div>
-          <Button variant="primary" size="md">+ Add College</Button>
+             <Link href="/admin/colleges/add">
+               <Button variant="primary" size="md">+ Add College</Button>
+             </Link>
         </div>
 
         <input
@@ -106,8 +109,14 @@ export default function AdminCollegesPage() {
                     <td className="px-6 py-4 text-[#64748B] text-sm">{college._count.reviews}</td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm">Edit</Button>
-                        <Button variant="danger" size="sm" onClick={() => deleteCollege(college.id)}>Delete</Button>
+                        <Link href={`/admin/colleges/${college.id}/edit`}>
+                          <Button variant="ghost" size="sm">
+                            Edit
+                          </Button>
+                        </Link>
+                        <Button variant="danger" size="sm" onClick={() => deleteCollege(college.id)}>
+                          Delete
+                        </Button>
                       </div>
                     </td>
                   </tr>

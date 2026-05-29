@@ -13,6 +13,7 @@ const adminLinks = [
   { label: "Manage Colleges", href: "/admin/colleges", desc: "Add, edit, delete college data", icon: "🏛" },
   { label: "Manage Users", href: "/admin/users", desc: "View and manage student accounts", icon: "👥" },
   { label: "Manage Reviews", href: "/admin/reviews", desc: "Approve or reject pending reviews", icon: "⭐" },
+  { label: "Manage Blogs", href: "/admin/blogs", desc: "Create and manage blog posts", icon: "📝" },
   { label: "Reports", href: "/admin/reports", desc: "Analytics and platform insights", icon: "📊" },
 ];
 
