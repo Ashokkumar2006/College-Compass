@@ -35,7 +35,8 @@ export async function GET(req: NextRequest) {
       page,
       totalPages: Math.ceil(total / limit),
     });
-  } catch {
+  } catch (error) {
+    console.error("/api/colleges GET error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
       },
     });
     return NextResponse.json({ college }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("/api/colleges POST error:", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

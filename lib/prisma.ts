@@ -9,7 +9,10 @@ declare global {
 }
 
 function createClient() {
-  const connectionString = process.env.DATABASE_URL!;
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("Missing DATABASE_URL environment variable. Set it in Vercel and redeploy.");
+  }
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter } as any);
 }
