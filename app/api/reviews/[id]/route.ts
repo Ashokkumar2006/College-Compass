@@ -36,7 +36,7 @@ export async function PUT(
       const reviews = await prisma.review.findMany({
         where: { collegeId: review.collegeId, status: "APPROVED" },
       });
-      const avgRating = reviews.reduce((sum: number, r) => sum + r.rating, 0) / reviews.length;
+      const avgRating = reviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) / reviews.length;
       await prisma.college.update({
         where: { id: review.collegeId },
         data: { rating: Math.round(avgRating * 10) / 10 },
