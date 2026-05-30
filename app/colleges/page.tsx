@@ -30,6 +30,7 @@ export default function CollegesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedStreams, setSelectedStreams] = useState<string[]>([]);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const [selectedFees, setSelectedFees] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
 
@@ -64,6 +65,14 @@ const filtered = colleges.filter((c) => {
     const matches = selectedStreams.some((s) =>
       collegeStream.includes(s.toLowerCase())
     );
+    if (!matches) return false;
+  }
+  if (selectedStates.length > 0) {
+    const collegeLocation = (c.location ?? "").toLowerCase();
+    const matches = selectedStates.some((s) => {
+      const stateName = s.toLowerCase().replace("-", " ");
+      return collegeLocation.includes(stateName);
+    });
     if (!matches) return false;
   }
   if (selectedFees.length > 0) {
@@ -115,8 +124,8 @@ const filtered = colleges.filter((c) => {
               { label: "Karnataka", value: "karnataka" },
               { label: "Rajasthan", value: "rajasthan" },
             ]}
-            selected={[]}
-            onChange={() => {}}
+            selected={selectedStates}
+            onChange={setSelectedStates}
             multiSelect={true}
           />
           <FilterGroup
