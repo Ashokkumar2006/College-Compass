@@ -9,7 +9,6 @@ import { useCompare } from "@/context/CompareContext";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeStream, setActiveStream] = useState<"engineering" | "medical">("engineering");
   const [scrolled, setScrolled] = useState(false);
   const { user, logout, isLoggedIn, isAdmin } = useAuth();
   const { compareList } = useCompare();
@@ -56,42 +55,28 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Stream Toggle */}
-          <div className="hidden md:flex items-center bg-[#F8FAFC] border border-[#E2E8F0] rounded-full p-1 gap-1">
-            {["engineering", "medical"].map((s) => (
-              <button key={s} onClick={() => setActiveStream(s as "engineering" | "medical")}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-                  activeStream === s ? "bg-[#4F46E5] text-white shadow-sm" : "text-[#64748B] hover:text-[#0F172A]"
-                }`}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
+          <div className="hidden md:flex items-center gap-6 ml-auto">
+            <div className="flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link key={link.href} href={link.href}
+                  className="relative px-3 py-2 text-sm text-[#64748B] hover:text-[#4F46E5] font-medium rounded-lg hover:bg-[#F8FAFC] transition-all duration-200">
+                  {link.label}
+                  {link.badge && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#4F46E5] text-white text-xs rounded-full flex items-center justify-center">
+                      {link.badge}
+                    </span>
+                  )}
+                </Link>
+              ))}
+              {isAdmin && (
+                <Link href="/admin" className="px-3 py-2 text-sm text-[#EF4444] hover:text-[#DC2626] font-medium rounded-lg hover:bg-[#FEE2E2] transition-all duration-200">
+                  Admin
+                </Link>
+              )}
+            </div>
 
-          {/* Nav Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link key={link.href} href={link.href}
-                className="relative px-3 py-2 text-sm text-[#64748B] hover:text-[#4F46E5] font-medium rounded-lg hover:bg-[#F8FAFC] transition-all duration-200">
-                {link.label}
-                {link.badge && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#4F46E5] text-white text-xs rounded-full flex items-center justify-center">
-                    {link.badge}
-                  </span>
-                )}
-              </Link>
-            ))}
-            {isAdmin && (
-              <Link href="/admin" className="px-3 py-2 text-sm text-[#EF4444] hover:text-[#DC2626] font-medium rounded-lg hover:bg-[#FEE2E2] transition-all duration-200">
-                Admin
-              </Link>
-            )}
-          </div>
-
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center gap-3">
-            {isLoggedIn ? (
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
+              {isLoggedIn ? (
                 <div className="relative group">
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F8FAFC] border border-[#E2E8F0] hover:border-[#4F46E5] transition-all cursor-pointer">
                     <div className="w-6 h-6 bg-[#4F46E5] rounded-full flex items-center justify-center">
@@ -112,13 +97,13 @@ export default function Navbar() {
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                <Link href="/login"><Button variant="ghost" size="sm">Login</Button></Link>
-                <Link href="/register"><Button variant="primary" size="sm">Sign Up</Button></Link>
-              </>
-            )}
+              ) : (
+                <>
+                  <Link href="/login"><Button variant="ghost" size="sm">Login</Button></Link>
+                  <Link href="/register"><Button variant="primary" size="sm">Sign Up</Button></Link>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -139,16 +124,6 @@ export default function Navbar() {
       {/* Mobile Menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-[#E2E8F0] bg-white px-4 py-4 flex flex-col gap-2">
-          <div className="flex items-center bg-[#F8FAFC] border border-[#E2E8F0] rounded-full p-1 gap-1 mb-2">
-            {["engineering", "medical"].map((s) => (
-              <button key={s} onClick={() => setActiveStream(s as "engineering" | "medical")}
-                className={`flex-1 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  activeStream === s ? "bg-[#4F46E5] text-white" : "text-[#64748B]"
-                }`}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)}
               className="px-3 py-2 text-sm text-[#64748B] hover:text-[#4F46E5] font-medium rounded-lg hover:bg-[#F8FAFC] transition-all">
