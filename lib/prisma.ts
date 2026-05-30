@@ -1,8 +1,11 @@
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
+const PrismaClient = (pkg as any).PrismaClient;
+
 declare global {
-  var prisma: PrismaClient | undefined;
+  // use `any` here to avoid type errors during builds when the generated client isn't present
+  var prisma: any | undefined;
 }
 
 function createClient() {
